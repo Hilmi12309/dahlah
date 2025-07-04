@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Flare - Extreme Flappy Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Press Start 2P', cursive;
+            background-color: #0f0f1a;
+            color: #00fffc;
+            touch-action: manipulation;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-color: #0f0f1a;
+            width: 100%;
+            height: auto;
+            touch-action: none;
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 5px #00fffc, 0 0 10px #00fffc, 0 0 15px #00fffc;
+        }
+        
+        .neon-border {
+            box-shadow: 0 0 10px #00fffc, 0 0 20px #00fffc, inset 0 0 10px #00fffc;
+            border: 2px solid #00fffc;
+        }
+        
+        .powerup-glow {
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px #ff00ff; }
+            100% { box-shadow: 0 0 20px #ff00ff, 0 0 30px #ff00ff; }
+        }
+        
+        .game-over {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        
+        button {
+            cursor: pointer;
+            outline: none;
+        }
+        
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            #startButton, #restartButton, #menuButton {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.8rem;
+            }
+            
+            .instructions {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1 class="text-center text-3xl md:text-4xl mb-2 neon-text">NEON FLARE</h1>
+        
+        <div class="relative">
+            <canvas id="gameCanvas" class="w-full neon-border rounded-lg"></canvas>
+            
+            <!-- Start Screen -->
+            <div id="startScreen" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 neon-border rounded-lg">
+                <h2 class="text-2xl md:text-3xl mb-4 neon-text">NEON FLARE</h2>
+                <p class="text-sm md:text-base mb-6 text-center px-4">Dodge obstacles, collect power-ups,<br>and survive as long as you can!</p>
+                <button id="startButton" class="px-8 py-3 bg-transparent neon-border neon-text hover:bg-blue-900 hover:bg-opacity-30 transition-all">
+                    START GAME
+                </button>
+                <div class="mt-6 text-xs text-center instructions">
+                    <p>TAP ANYWHERE or PRESS SPACE to flap</p>
+                    <p class="mt-2">Collect <span class="text-purple-300">POWER-UPS</span> for special abilities</p>
+                </div>
+            </div>
+            
+            <!-- Game Over Screen -->
+            <div id="gameOverScreen" class="absolute inset-0 hidden flex-col items-center justify-center bg-black bg-opacity-80 neon-border rounded-lg">
+                <h2 class="text-2xl md:text-3xl mb-4 neon-text game-over">GAME OVER</h2>
+                <p id="finalScore" class="text-xl mb-2">SCORE: 0</p>
+                <p id="highScore" class="text-lg mb-6">HIGH SCORE: 0</p>
+                <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
+                    <button id="restartButton" class="px-6 py-2 bg-transparent neon-border neon-text hover:bg-green-900 hover:bg-opacity-30">
+                        PLAY AGAIN
+                    </button>
+                    <button id="menuButton" class="px-6 py-2 bg-transparent neon-border neon-text hover:bg-blue-900 hover:bg-opacity-30">
+                        MENU
+                    </button>
+                </div>
+            </div>
+            
+            <!-- In-game UI -->
+            <div id="gameUI" class="absolute top-2 left-2 hidden">
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm md:text-lg neon-text">SCORE: <span id="scoreDisplay">0</span></div>
+                    <div class="text-sm md:text-lg neon-text">HI: <span id="hiScoreDisplay">0</span></div>
+                </div>
+                <div id="powerupIndicator" class="mt-1 hidden">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-purple-500 powerup-glow mr-1"></div>
+                        <span class="text-xs neon-text" id="powerupTimer">0s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-2 text-xs text-center text-gray-400 instructions">
+            <p>TAP ANYWHERE or PRESS SPACE to control. Game gets harder over time!</p>
+        </div>
+    </div>
+
+    <script>
+        // Game initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game elements
+            const gameContainer = document.getElementById('gameContainer');
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const startScreen = document.getElementById('startScreen');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const gameUI = document.getElementById('gameUI');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const hiScoreDisplay = document.getElementById('hiScoreDisplay');
+            const finalScore = document.getElementById('finalScore');
+            const highScore = document.getElementById('highScore');
+            const powerupIndicator = document.getElementById('powerupIndicator');
+            const powerupTimer = document.getElementById('powerupTimer');
+            const startButton = document.getElementById('startButton');
+            const restartButton = document.getElementById('restartButton');
+            const menuButton = document.getElementById('menuButton');
+            
+            // Game variables
+            let gameRunning = false;
+            let score = 0;
+            let hiScore = localStorage.getItem('neonFlareHiScore') || 0;
+            let animationFrameId;
+            let lastTime = 0;
+            let gameSpeed = 2;
+            let gravity = 0.5;
+            let bird;
+            let pipes = [];
+            let powerups = [];
+            let obstacles = [];
+            let particles = [];
+            let powerupActive = false;
+            let powerupEndTime = 0;
+            let powerupType = '';
+            let difficultyInterval = 2000;
+            let lastDifficultyIncrease = 0;
+            let pipeInterval = 1500;
+            let lastPipeTime = 0;
+            let powerupInterval = 8000;
+            let lastPowerupTime = 0;
+            let obstacleInterval = 20000;
+            let lastObstacleTime = 0;
+            let isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            
+            // Set canvas size
+            function resizeCanvas() {
+                const containerWidth = gameContainer.clientWidth;
+                const aspectRatio = 16 / 9;
+                const height = containerWidth / aspectRatio;
+                
+                canvas.width = containerWidth;
+                canvas.height = height;
+                
+                // Adjust game elements for mobile
+                if (isMobile) {
+                    gameSpeed = 1.5;
+                    gravity = 0.4;
+                }
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // Initialize game
+            function initGame() {
+                bird = {
+                    x: canvas.width / 4,
+                    y: canvas.height / 2,
+                    radius: Math.max(12, canvas.width / 40),
+                    velocity: 0,
+                    color: '#00fffc',
+                    trail: []
+                };
+                
+                pipes = [];
+                powerups = [];
+                obstacles = [];
+                particles = [];
+                score = 0;
+                gameSpeed = isMobile ? 1.5 : 2;
+                gravity = isMobile ? 0.4 : 0.5;
+                powerupActive = false;
+                powerupType = '';
+                lastPipeTime = 0;
+                lastPowerupTime = 0;
+                lastObstacleTime = 0;
+                lastDifficultyIncrease = 0;
+                
+                scoreDisplay.textContent = score;
+                hiScoreDisplay.textContent = hiScore;
+                
+                startScreen.classList.add('hidden');
+                gameOverScreen.classList.add('hidden');
+                gameUI.classList.remove('hidden');
+                powerupIndicator.classList.add('hidden');
+                
+                gameRunning = true;
+                lastTime = performance.now();
+                gameLoop(lastTime);
+            }
+            
+            // Game loop
+            function gameLoop(timestamp) {
+                if (!gameRunning) return;
+                
+                const deltaTime = timestamp - lastTime;
+                lastTime = timestamp;
+                
+                update(deltaTime);
+                draw();
+                
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+            
+            // Update game state
+            function update(deltaTime) {
+                // Update bird
+                bird.velocity += gravity;
+                bird.y += bird.velocity;
+                
+                // Add current position to trail
+                bird.trail.push({x: bird.x, y: bird.y});
+                if (bird.trail.length > 10) {
+                    bird.trail.shift();
+                }
+                
+                // Check for collisions with top/bottom
+                if (bird.y - bird.radius < 0 || bird.y + bird.radius > canvas.height) {
+                    if (powerupActive && powerupType === 'shield') {
+                        bird.velocity = -bird.velocity * 0.5;
+                        bird.y = Math.max(bird.radius, Math.min(canvas.height - bird.radius, bird.y));
+                        createParticles(bird.x, bird.y, 10, '#ff00ff');
+                    } else {
+                        gameOver();
+                        return;
+                    }
+                }
+                
+                // Update pipes
+                for (let i = pipes.length - 1; i >= 0; i--) {
+                    pipes[i].x -= gameSpeed;
+                    
+                    // Check for collision with bird
+                    if (
+                        !powerupActive &&
+                        bird.x + bird.radius > pipes[i].x && 
+                        bird.x - bird.radius < pipes[i].x + pipes[i].width &&
+                        (bird.y - bird.radius < pipes[i].topHeight || 
+                         bird.y + bird.radius > canvas.height - pipes[i].bottomHeight)
+                    ) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // Check if bird passed the pipe
+                    if (pipes[i].x + pipes[i].width < bird.x && !pipes[i].passed) {
+                        pipes[i].passed = true;
+                        score++;
+                        scoreDisplay.textContent = score;
+                        createParticles(pipes[i].x + pipes[i].width / 2, canvas.height / 2, 5, '#00fffc');
+                    }
+                    
+                    // Remove pipes that are off screen
+                    if (pipes[i].x + pipes[i].width < 0) {
+                        pipes.splice(i, 1);
+                    }
+                }
+                
+                // Update powerups
+                for (let i = powerups.length - 1; i >= 0; i--) {
+                    powerups[i].x -= gameSpeed;
+                    
+                    // Check for collision with bird
+                    if (
+                        Math.sqrt(
+                            Math.pow(bird.x - powerups[i].x, 2) + 
+                            Math.pow(bird.y - powerups[i].y, 2)
+                        ) < bird.radius + powerups[i].radius
+                    ) {
+                        activatePowerup(powerups[i].type);
+                        powerups.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Remove powerups that are off screen
+                    if (powerups[i].x + powerups[i].radius < 0) {
+                        powerups.splice(i, 1);
+                    }
+                }
+                
+                // Update obstacles
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    obstacles[i].x -= gameSpeed * obstacles[i].speedFactor;
+                    
+                    // Check for collision with bird
+                    if (
+                        !powerupActive &&
+                        obstacles[i].type === 'laser' && 
+                        obstacles[i].active &&
+                        bird.x + bird.radius > obstacles[i].x && 
+                        bird.x - bird.radius < obstacles[i].x + obstacles[i].width &&
+                        bird.y + bird.radius > obstacles[i].y && 
+                        bird.y - bird.radius < obstacles[i].y + obstacles[i].height
+                    ) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // Check for collision with rotating blades
+                    if (
+                        !powerupActive &&
+                        obstacles[i].type === 'blade' &&
+                        Math.sqrt(
+                            Math.pow(bird.x - (obstacles[i].x + obstacles[i].radius), 2) + 
+                            Math.pow(bird.y - (obstacles[i].y + obstacles[i].radius), 2)
+                        ) < bird.radius + obstacles[i].radius
+                    ) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // Update obstacle state
+                    if (obstacles[i].type === 'laser') {
+                        obstacles[i].timer += deltaTime;
+                        if (obstacles[i].timer >= obstacles[i].interval) {
+                            obstacles[i].timer = 0;
+                            obstacles[i].active = !obstacles[i].active;
+                            obstacles[i].interval = obstacles[i].active ? 
+                                1000 + Math.random() * 1000 : 
+                                500 + Math.random() * 1500;
+                        }
+                    } else if (obstacles[i].type === 'blade') {
+                        obstacles[i].angle += 0.1;
+                    }
+                    
+                    // Remove obstacles that are off screen
+                    if (obstacles[i].x + obstacles[i].width < 0) {
+                        obstacles.splice(i, 1);
+                    }
+                }
+                
+                // Update particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].x += particles[i].vx;
+                    particles[i].y += particles[i].vy;
+                    particles[i].life -= deltaTime;
+                    
+                    if (particles[i].life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+                
+                // Update powerup timer
+                if (powerupActive) {
+                    const remainingTime = Math.max(0, powerupEndTime - performance.now());
+                    powerupTimer.textContent = `${(remainingTime / 1000).toFixed(1)}s`;
+                    
+                    if (remainingTime <= 0) {
+                        deactivatePowerup();
+                    }
+                }
+                
+                // Generate new pipes
+                if (performance.now() - lastPipeTime > pipeInterval) {
+                    generatePipe();
+                    lastPipeTime = performance.now();
+                    pipeInterval = 1200 + Math.random() * 600;
+                }
+                
+                // Generate powerups
+                if (performance.now() - lastPowerupTime > powerupInterval && Math.random() < 0.7) {
+                    generatePowerup();
+                    lastPowerupTime = performance.now();
+                    powerupInterval = 5000 + Math.random() * 5000;
+                }
+                
+                // Generate special obstacles based on score
+                if (score >= 20 && performance.now() - lastObstacleTime > obstacleInterval) {
+                    if (Math.random() < 0.7) {
+                        generateObstacle();
+                        lastObstacleTime = performance.now();
+                        obstacleInterval = 15000 + Math.random() * 10000;
+                    }
+                }
+                
+                // Increase difficulty over time
+                if (performance.now() - lastDifficultyIncrease > difficultyInterval) {
+                    increaseDifficulty();
+                    lastDifficultyIncrease = performance.now();
+                }
+            }
+            
+            // Draw everything
+            function draw() {
+                // Clear canvas
+                ctx.fillStyle = '#0f0f1a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw grid
+                drawGrid();
+                drawParticles();
+                drawBirdTrail();
+                drawBird();
+                drawPipes();
+                drawPowerups();
+                drawObstacles();
+            }
+            
+            function drawGrid() {
+                ctx.strokeStyle = '#1a1a2e';
+                ctx.lineWidth = 1;
+                
+                // Vertical lines
+                for (let x = 0; x < canvas.width; x += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                // Horizontal lines
+                for (let y = 0; y < canvas.height; y += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+            }
+            
+            function drawBirdTrail() {
+                if (bird.trail.length < 2) return;
+                
+                ctx.strokeStyle = '#00fffc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(bird.trail[0].x, bird.trail[0].y);
+                
+                for (let i = 1; i < bird.trail.length; i++) {
+                    ctx.lineTo(bird.trail[i].x, bird.trail[i].y);
+                }
+                
+                ctx.stroke();
+            }
+            
+            function drawBird() {
+                // Draw bird
+                ctx.fillStyle = bird.color;
+                ctx.beginPath();
+                ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw eye
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(
+                    bird.x + bird.radius * 0.4, 
+                    bird.y - bird.radius * 0.2, 
+                    bird.radius * 0.3, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Draw glow if powered up
+                if (powerupActive) {
+                    ctx.shadowColor = powerupType === 'speed' ? '#00fffc' : '#ff00ff';
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(bird.x, bird.y, bird.radius + 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+            
+            function drawPipes() {
+                pipes.forEach(pipe => {
+                    // Top pipe
+                    ctx.fillStyle = '#006666';
+                    ctx.fillRect(pipe.x, 0, pipe.width, pipe.topHeight);
+                    
+                    // Bottom pipe
+                    ctx.fillRect(
+                        pipe.x, 
+                        canvas.height - pipe.bottomHeight, 
+                        pipe.width, 
+                        pipe.bottomHeight
+                    );
+                    
+                    // Pipe edges (neon effect)
+                    ctx.strokeStyle = '#00fffc';
+                    ctx.lineWidth = 3;
+                    
+                    // Top pipe edge
+                    ctx.beginPath();
+                    ctx.moveTo(pipe.x, pipe.topHeight);
+                    ctx.lineTo(pipe.x + pipe.width, pipe.topHeight);
+                    ctx.stroke();
+                    
+                    // Bottom pipe edge
+                    ctx.beginPath();
+                    ctx.moveTo(pipe.x, canvas.height - pipe.bottomHeight);
+                    ctx.lineTo(pipe.x + pipe.width, canvas.height - pipe.bottomHeight);
+                    ctx.stroke();
+                });
+            }
+            
+            function drawPowerups() {
+                powerups.forEach(powerup => {
+                    // Outer glow
+                    ctx.shadowColor = '#ff00ff';
+                    ctx.shadowBlur = 15;
+                    
+                    // Powerup circle
+                    ctx.fillStyle = powerup.color;
+                    ctx.beginPath();
+                    ctx.arc(powerup.x, powerup.y, powerup.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Reset shadow
+                    ctx.shadowBlur = 0;
+                    
+                    // Inner symbol
+                    ctx.fillStyle = '#fff';
+                    ctx.font = `${powerup.radius * 1.2}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    if (powerup.type === 'speed') {
+                        ctx.fillText('⚡', powerup.x, powerup.y);
+                    } else if (powerup.type === 'shield') {
+                        ctx.fillText('🛡️', powerup.x, powerup.y);
+                    }
+                });
+            }
+            
+            function drawObstacles() {
+                obstacles.forEach(obstacle => {
+                    if (obstacle.type === 'laser') {
+                        if (obstacle.active) {
+                            // Laser beam
+                            const gradient = ctx.createLinearGradient(
+                                obstacle.x, 
+                                obstacle.y, 
+                                obstacle.x + obstacle.width, 
+                                obstacle.y
+                            );
+                            gradient.addColorStop(0, 'rgba(255, 0, 255, 0.1)');
+                            gradient.addColorStop(0.5, 'rgba(255, 0, 255, 0.8)');
+                            gradient.addColorStop(1, 'rgba(255, 0, 255, 0.1)');
+                            
+                            ctx.fillStyle = gradient;
+                            ctx.fillRect(
+                                obstacle.x, 
+                                obstacle.y, 
+                                obstacle.width, 
+                                obstacle.height
+                            );
+                            
+                            // Laser glow
+                            ctx.shadowColor = '#ff00ff';
+                            ctx.shadowBlur = 20;
+                            ctx.fillRect(
+                                obstacle.x, 
+                                obstacle.y, 
+                                obstacle.width, 
+                                obstacle.height
+                            );
+                            ctx.shadowBlur = 0;
+                            
+                            // Laser ends
+                            ctx.fillStyle = '#ff00ff';
+                            ctx.fillRect(
+                                obstacle.x - 5, 
+                                obstacle.y, 
+                                10, 
+                                obstacle.height
+                            );
+                            ctx.fillRect(
+                                obstacle.x + obstacle.width - 5, 
+                                obstacle.y, 
+                                10, 
+                                obstacle.height
+                            );
+                        } else {
+                            // Laser inactive (charging)
+                            ctx.fillStyle = 'rgba(255, 0, 255, 0.3)';
+                            ctx.fillRect(
+                                obstacle.x, 
+                                obstacle.y, 
+                                obstacle.width, 
+                                obstacle.height
+                            );
+                        }
+                    } else if (obstacle.type === 'blade') {
+                        ctx.save();
+                        ctx.translate(
+                            obstacle.x + obstacle.radius, 
+                            obstacle.y + obstacle.radius
+                        );
+                        ctx.rotate(obstacle.angle);
+                        
+                        // Blade center
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, obstacle.radius * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Blade arms
+                        for (let i = 0; i < 4; i++) {
+                            ctx.rotate(Math.PI / 2);
+                            
+                            // Blade gradient
+                            const bladeGradient = ctx.createLinearGradient(
+                                0, 
+                                -obstacle.radius * 0.1, 
+                                0, 
+                                obstacle.radius * 1.5
+                            );
+                            bladeGradient.addColorStop(0, '#ff00ff');
+                            bladeGradient.addColorStop(1, '#990099');
+                            
+                            ctx.fillStyle = bladeGradient;
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(-obstacle.radius * 0.2, obstacle.radius * 1.5);
+                            ctx.lineTo(obstacle.radius * 0.2, obstacle.radius * 1.5);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                        
+                        // Blade glow
+                        ctx.shadowColor = '#ff00ff';
+                        ctx.shadowBlur = 15;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, obstacle.radius * 1.6, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        
+                        ctx.restore();
+                    }
+                });
+            }
+            
+            function drawParticles() {
+                particles.forEach(particle => {
+                    ctx.globalAlpha = particle.life / 1000;
+                    ctx.fillStyle = particle.color;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+            }
+            
+            // Game functions
+            function flap() {
+                if (!gameRunning) return;
+                
+                bird.velocity = isMobile ? -8 : -10;
+                createParticles(bird.x, bird.y - bird.radius, 3, '#00fffc');
+            }
+            
+            function generatePipe() {
+                const minGap = Math.max(100, canvas.height * 0.2);
+                const maxGap = Math.max(150, canvas.height * 0.3);
+                const gap = minGap + Math.random() * (maxGap - minGap);
+                
+                const minHeight = 50;
+                const maxHeight = canvas.height - gap - minHeight;
+                const topHeight = minHeight + Math.random() * (maxHeight - minHeight);
+                
+                pipes.push({
+                    x: canvas.width,
+                    width: 60,
+                    topHeight: topHeight,
+                    bottomHeight: canvas.height - topHeight - gap,
+                    passed: false
+                });
+            }
+            
+            function generatePowerup() {
+                const types = ['speed', 'shield'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                const colors = {
+                    'speed': '#00fffc',
+                    'shield': '#ff00ff'
+                };
+                
+                powerups.push({
+                    x: canvas.width,
+                    y: 50 + Math.random() * (canvas.height - 100),
+                    radius: 12,
+                    type: type,
+                    color: colors[type]
+                });
+            }
+            
+            function generateObstacle() {
+                const types = ['laser', 'blade'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                if (type === 'laser') {
+                    obstacles.push({
+                        x: canvas.width,
+                        y: 50 + Math.random() * (canvas.height - 100),
+                        width: 30 + Math.random() * 50,
+                        height: 5 + Math.random() * 10,
+                        type: 'laser',
+                        active: false,
+                        timer: 0,
+                        interval: 500 + Math.random() * 1500,
+                        speedFactor: 1
+                    });
+                } else if (type === 'blade') {
+                    obstacles.push({
+                        x: canvas.width,
+                        y: 50 + Math.random() * (canvas.height - 100),
+                        radius: 20 + Math.random() * 20,
+                        type: 'blade',
+                        angle: 0,
+                        speedFactor: 0.7
+                    });
+                }
+            }
+            
+            function activatePowerup(type) {
+                powerupActive = true;
+                powerupType = type;
+                powerupEndTime = performance.now() + 5000; // 5 seconds
+                
+                createParticles(bird.x, bird.y, 20, type === 'speed' ? '#00fffc' : '#ff00ff');
+                
+                if (type === 'speed') {
+                    bird.color = '#00fffc';
+                    gameSpeed *= 1.5;
+                } else if (type === 'shield') {
+                    bird.color = '#ff00ff';
+                }
+                
+                powerupIndicator.classList.remove('hidden');
+            }
+            
+            function deactivatePowerup() {
+                powerupActive = false;
+                powerupType = '';
+                
+                bird.color = '#00fffc';
+                if (powerupType === 'speed') {
+                    gameSpeed /= 1.5;
+                }
+                
+                powerupIndicator.classList.add('hidden');
+            }
+            
+            function increaseDifficulty() {
+                gameSpeed += 0.05;
+                gravity += 0.01;
+                pipeInterval = Math.max(800, pipeInterval - 10);
+            }
+            
+            function createParticles(x, y, count, color) {
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: x,
+                        y: y,
+                        radius: 2 + Math.random() * 3,
+                        vx: -1 + Math.random() * 2,
+                        vy: -1 + Math.random() * 2,
+                        life: 500 + Math.random() * 500,
+                        color: color
+                    });
+                }
+            }
+            
+            function gameOver() {
+                gameRunning = false;
+                cancelAnimationFrame(animationFrameId);
+                
+                createParticles(bird.x, bird.y, 30, '#ff0000');
+                
+                if (score > hiScore) {
+                    hiScore = score;
+                    localStorage.setItem('neonFlareHiScore', hiScore);
+                }
+                
+                finalScore.textContent = score;
+                highScore.textContent = hiScore;
+                gameOverScreen.classList.remove('hidden');
+                gameUI.classList.add('hidden');
+            }
+            
+            // Event listeners
+            startButton.addEventListener('click', initGame);
+            restartButton.addEventListener('click', initGame);
+            menuButton.addEventListener('click', () => {
+                gameOverScreen.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+            });
+            
+            // Control methods
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    flap();
+                }
+            });
+            
+            // Touch/click controls
+            canvas.addEventListener('mousedown', flap);
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                flap();
+            });
+            
+            // Prevent scrolling on touch devices
+            document.body.addEventListener('touchmove', (e) => {
+                if (gameRunning) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Initial draw
+            draw();
+        });
+    </script>
+</body>
+</html>
