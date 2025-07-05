@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitur Game - Neon Flare</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Press Start 2P', cursive;
+      background-color: #0f0f1a;
+      color: #00fffc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .neon-text {
+      text-shadow: 0 0 5px #00fffc, 0 0 10px #00fffc, 0 0 15px #00fffc;
+    }
+
+    .neon-border {
+      box-shadow: 0 0 10px #00fffc, 0 0 20px #00fffc, inset 0 0 10px #00fffc;
+      border: 2px solid #00fffc;
+      border-radius: 8px;
+    }
+
+    a.back-button {
+      margin-top: 2rem;
+      padding: 0.6rem 1.5rem;
+      border: 2px solid #00fffc;
+      border-radius: 6px;
+      color: #00fffc;
+      text-decoration: none;
+      box-shadow: 0 0 10px #00fffc;
+      transition: background 0.2s ease;
+    }
+
+    a.back-button:hover {
+      background-color: rgba(0, 255, 252, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="w-full max-w-md neon-border p-6 text-xs md:text-sm bg-black bg-opacity-80">
+    <h1 class="text-xl mb-4 text-center neon-text">🔥 FITUR GAME NEON FLARE 🔥</h1>
+    <ul class="space-y-3 list-disc list-inside leading-relaxed">
+      <li>🔺 <strong>7 Jenis Pipa</strong>:
+      <li>1. Normal</li>
+      <li>2. Spiky</li>
+      <li>3. Laser Gap</li>
+      <li>4. Closing</li>
+      <li>5. Moving</li>
+      <li>6. Invisible</li> 
+      <li>7. Warp</li>
+      </li><br>
+      <li>⚡ <strong>6 Power-ups</strong>: Speed, Shield, Ghost, Magnet, Slowmo, Godmode</li><br>
+      <li>🎯 <strong>Sistem Combo Multiplier</strong>: Naik seiring akurasi & waktu</li><br>
+      <li>🚀 <strong>Parallax Background</strong>: Efek 3D mendalam dengan multi-layer</li><br>
+      <li>💥 <strong>Laser Obstacle</strong>: Muncul dari kanan layar mulai skor 10</li><br>
+      <li>🎮 <strong>Kontrol Multi-input</strong>: Tap, klik, atau tekan spasi</li>
+      <br>
+      <li>🔊 <strong>Volume Slider</strong>: Pengaturan suara musik & efek</li>
+      <br>
+      <li>🧠 <strong>Adaptive Difficulty</strong>: Game makin sulit tiap beberapa detik</li>
+      <br>
+      <li>💾 <strong>High Score Tersimpan</strong>: Otomatis simpan di localStorage</li>
+      <br>
+      <li>📱 <strong>Desain Mobile-Friendly</strong>: Responsif di semua ukuran layar</li>
+    </ul>
+  </div>
+
+  <a href="index.html" class="back-button mt-6">⬅ KEMBALI KE MENU</a>
+</body>
+</html>
