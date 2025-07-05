@@ -759,7 +759,7 @@
                         
                     case 'closing':
                         if (pipes[i].closing) {
-                            const closeAmount = pipes[i].closeSpeed * deltaTime * 0.1;
+                            const closeAmount = pipes[i].closeSpeed * deltaTime * 0.3;
                             pipes[i].topHeight += closeAmount;
                             pipes[i].bottomHeight += closeAmount;
                             
