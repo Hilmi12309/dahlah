@@ -196,6 +196,12 @@
                     START GAME
                 </button>
                 <br>
+                <div class="flex flex-col items-center text-center text-xs mb-4 mt-2">
+  <label for="difficultySlider" class="neon-text mb-2">PIPE DIFFICULTY</label>
+  <input type="range" id="difficultySlider" min="1" max="100" value="10" class="w-48">
+  <span id="difficultyValue" class="mt-1 neon-text">10</span>
+                </div>
+                <br>
                 <div class="mt-6 text-xs text-center instructions">
                     <p>TAP ANYWHERE or PRESS SPACE to flap</p>
                     <p class="mt-2">Collect <span class="text-purple-300">POWER-UPS</span> for special abilities</p>
@@ -298,6 +304,11 @@
         const startButton = document.getElementById('startButton');
         const restartButton = document.getElementById('restartButton');
         const menuButton = document.getElementById('menuButton');
+        const difficultySlider = document.getElementById('difficultySlider');
+        const difficultyValue = document.getElementById('difficultyValue');
+        difficultySlider.addEventListener('input', () => {
+        difficultyValue.textContent = difficultySlider.value;
+        });
         
         // Audio elements
         const bgMusic = document.getElementById('bgMusic');
@@ -670,7 +681,9 @@
             magnetRadius = 0;
             slowmoFactor = 1;
             screenShake = 0;
-            pipeTypesUnlocked = 1; // Start with only normal pipes
+            const sliderValue = parseInt(difficultySlider.value);
+pipeTypesUnlocked = Math.ceil((sliderValue / 100) * 8);
+pipeTypesUnlocked = Math.max(1, Math.min(pipeTypesUnlocked, 8)); // Start with only normal pipes
             
             scoreDisplay.textContent = score;
             hiScoreDisplay.textContent = hiScore;
