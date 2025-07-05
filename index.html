@@ -682,7 +682,7 @@
             slowmoFactor = 1;
             screenShake = 0;
             const sliderValue = parseInt(difficultySlider.value);
-pipeTypesUnlocked = Math.ceil((sliderValue / 100) * 8);
+pipeTypesUnlocked = Math.ceil((sliderValue / 100) * 10);
 pipeTypesUnlocked = Math.max(1, Math.min(pipeTypesUnlocked, 8)); // Start with only normal pipes
             
             scoreDisplay.textContent = score;
@@ -1040,7 +1040,7 @@ pipeTypesUnlocked = Math.max(1, Math.min(pipeTypesUnlocked, 8)); // Start with o
             if (score >= 10 && performance.now() - lastObstacleTime > obstacleInterval / slowmoFactor && Math.random() < 0.5) {
                 generateShootingLaser();
                 lastObstacleTime = performance.now();
-                obstacleInterval = Math.max(8000, 15000 - score * 50);
+                obstacleInterval = Math.max(8000, 15000 - score * 150);
             }
             
             // Increase difficulty over time
@@ -1625,10 +1625,10 @@ pipeTypesUnlocked = Math.max(1, Math.min(pipeTypesUnlocked, 8)); // Start with o
                 gameSpeed *= 1.5;
             }
             if (powerupActive && powerupType === 'godmode') {
-                gameSpeed *= 2;
+                gameSpeed *= 3;
             }
-            gravity += 0.01;
-            pipeInterval = Math.max(400, pipeInterval - 5);
+            gravity += 0.2;
+            pipeInterval = Math.max(400, pipeInterval - 3);
         }
 
         function createParticles(x, y, count, color, type = 'round') {
