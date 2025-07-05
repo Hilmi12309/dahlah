@@ -670,7 +670,7 @@
             magnetRadius = 0;
             slowmoFactor = 1;
             screenShake = 0;
-            pipeTypesUnlocked = 10; // Start with only normal pipes
+            pipeTypesUnlocked = 1; // Start with only normal pipes
             
             scoreDisplay.textContent = score;
             hiScoreDisplay.textContent = hiScore;
@@ -1646,8 +1646,8 @@
                 localStorage.setItem('neonFlareHiScore', hiScore);
             }
             
-            finalScore.textContent = score;
-            highScore.textContent = hiScore;
+            finalScore.textContent = Math.floor(score);
+            highScore.textContent = Math.floor(hiScore);
             gameOverScreen.classList.remove('hidden');
             gameUI.classList.add('hidden');
         }
