@@ -208,6 +208,8 @@
                 <p id="finalScore" class="text-xl mb-2">SCORE: 0</p>
                 <p id="highScore" class="text-lg mb-6">HIGH SCORE: 0</p>
                 <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
+                    <br>
+                    <br>
                     <button id="restartButton" class="px-6 py-2 bg-transparent neon-border neon-text hover:bg-green-900 hover:bg-opacity-30">
                         PLAY AGAIN
                     </button>
@@ -668,7 +670,7 @@
             magnetRadius = 0;
             slowmoFactor = 1;
             screenShake = 0;
-            pipeTypesUnlocked = 2; // Start with only normal pipes
+            pipeTypesUnlocked = 1.5; // Start with only normal pipes
             
             scoreDisplay.textContent = score;
             hiScoreDisplay.textContent = hiScore;
@@ -749,7 +751,7 @@
                     case 'laser_gap':
                         pipes[i].laserTimer += deltaTime;
                         if (pipes[i].laserTimer >= pipes[i].laserInterval) {
-                            pipes[i].laserTimer = 0;
+                            pipes[i].laserTimer = 1;
                             pipes[i].laserActive = !pipes[i].laserActive;
                             if (pipes[i].laserActive) playSound(laserSound, 0.2);
                         }
@@ -862,7 +864,7 @@
                     if (pipes[i].type === 'laser_gap' && pipes[i].laserActive) {
                         const gapCenter = pipes[i].topHeight + 
                             (canvas.height - pipes[i].topHeight - pipes[i].bottomHeight) / 2;
-                        const laserHeight = 20;
+                        const laserHeight = 12;
                         
                         if (Math.abs(bird.y - gapCenter) < laserHeight / 2 + bird.radius) {
                             screenShake = 10;
@@ -926,8 +928,8 @@
                             bird.x - powerups[i].x
                         );
                         
-                        powerups[i].x += Math.cos(angle) * -5;
-                        powerups[i].y += Math.sin(angle) * -5;
+                        powerups[i].x += Math.cos(angle) * 5;
+                        powerups[i].y += Math.sin(angle) * 5;
                     }
                 }
                 
@@ -1283,7 +1285,7 @@
                         if (pipe.laserActive) {
                             const gapCenter = pipe.topHeight + 
                                 (canvas.height - pipe.topHeight - pipe.bottomHeight) / 2;
-                            const laserHeight = 20;
+                            const laserHeight = 12;
                             
                             // Laser beam in gap
                             const gradient = ctx.createLinearGradient(
